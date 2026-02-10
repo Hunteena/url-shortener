@@ -19,30 +19,22 @@ def init_db():
     conn = get_conn()
     conn.execute("""
         CREATE TABLE IF NOT EXISTS urls (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            code TEXT UNIQUE,
+            code TEXT UNIQUE PRIMARY KEY,
             url TEXT NOT NULL
         );
     """)
     conn.close()
     logger.info("DB initialized at %s", os.getenv("DATABASE_PATH", DATABASE_PATH))
 
-def create_row(url: str) -> int:
+def create_row(url: str, code: str) -> None:
     conn = get_conn()
     with conn:
-        cur = conn.execute("INSERT INTO urls (url) VALUES (?);", (url,))
-        rowid = cur.lastrowid
-    conn.close()
-    return rowid
-
-def set_code_for_id(rowid: int, code: str) -> None:
-    conn = get_conn()
-    conn.execute("UPDATE urls SET code = ? WHERE id = ?;", (code, rowid))
+        cur = conn.execute("INSERT INTO urls (url, code) VALUES (?, ?);", (url, code))
     conn.close()
 
 def get_by_code(code: str) -> sqlite3.Row:
     conn = get_conn()
-    cur = conn.execute("SELECT id, code, url FROM urls WHERE code = ?;", (code,))
+    cur = conn.execute("SELECT code, url FROM urls WHERE code = ?;", (code,))
     row = cur.fetchone()
     conn.close()
     return row
